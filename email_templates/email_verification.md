@@ -1,12 +1,5 @@
-Hello {{ name }},
+Hello {name},
 
-Thank you for registering with **OurSite**! 🎉
+Thank you for registering at OurSite. Please click the link below to verify your email address:
 
-To complete your registration and verify your email, please click the button below:
-
-👉 [Verify My Email]({{ verification_url }})
-
-If you did not sign up for an account, you can safely ignore this email.
-
-Thanks,  
-The OurSite Team 🚀
+[Verify Email]({verification_url})
