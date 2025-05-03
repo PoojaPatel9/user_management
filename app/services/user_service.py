@@ -69,9 +69,8 @@ class UserService:
             if new_user.role == UserRole.ADMIN:
                 new_user.email_verified = True
 
-            else:
-                new_user.verification_token = generate_verification_token()
-                await email_service.send_verification_email(new_user)
+            
+            new_user.verification_token = generate_verification_token()
 
             session.add(new_user)
             await session.commit()
@@ -119,10 +118,14 @@ class UserService:
         return result.scalars().all() if result else []
 
     @classmethod
-    async def register_user(cls, session: AsyncSession, user_data: Dict[str, str], get_email_service) -> Optional[User]:
-        return await cls.create(session, user_data, get_email_service)
+    async def register_user(cls, session: AsyncSession, user_data: Dict[str, str], email_service: EmailService) -> Optional[User]:
+        user = await cls.create(session, user_data, email_service)
     
+        if user and not user.email_verified:
+            await email_service.send_verification_email(user)  # 👈 MUST BE HERE
+        return user
 
+    
     @classmethod
     async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
         user = await cls.get_by_email(session, email)
