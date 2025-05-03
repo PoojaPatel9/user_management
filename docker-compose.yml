@@ -24,7 +24,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "5050:80" # Expose PgAdmin on port 5050 of the host
+      - "5050:80"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
     networks:
@@ -51,9 +51,24 @@ services:
     networks:
       - app-network
 
+  minio:  # ✅ Moved to the correct level
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio-data:/data
+    networks:
+      - app-network
+
 volumes:
   postgres-data:
   pgadmin-data:
+  minio-data:
 
 networks:
   app-network:

@@ -6,6 +6,11 @@ from app.database import Database
 from app.dependencies import get_settings
 from app.routers import user_routes
 from app.utils.api_description import getDescription
+from app.routers import invite_routes
+from app.database import init_db
+
+app.include_router(invite_routes.router)
+
 app = FastAPI(
     title="User Management",
     description=getDescription(),
