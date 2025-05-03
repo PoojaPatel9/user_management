@@ -6,6 +6,7 @@ from app.database import Database
 from app.dependencies import get_settings
 from app.routers import user_routes
 from app.utils.api_description import getDescription
+<<<<<<< HEAD
 from dotenv import load_dotenv
 import os
 import smtplib
@@ -34,6 +35,12 @@ def send_test_email():
     except Exception as e:
         print(f"❌ Failed to send test email: {e}")
 
+=======
+from app.routers import invite_routes
+from app.database import init_db
+
+app.include_router(invite_routes.router)
+>>>>>>> 1-email-verification-email-after-registration-was-not-being-sent-or-received
 
 app = FastAPI(
     title="User Management",

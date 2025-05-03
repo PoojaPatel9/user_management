@@ -4,6 +4,21 @@ from pydantic import  Field, AnyUrl, DirectoryPath
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    smtp_server: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+    server_base_url: str
+    access_token_expire_minutes: int = 30
+    max_login_attempts: int = 5
+
+    # ✅ Add these:
+    minio_endpoint: str
+    minio_access_key: str
+    minio_secret_key: str
+    minio_bucket: str
+    invite_base_url: str
+
     max_login_attempts: int = Field(default=3, description="Background color of QR codes")
     # Server configuration
     server_base_url: AnyUrl = Field(default='http://localhost', description="Base URL of the server")
