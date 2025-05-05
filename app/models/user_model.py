@@ -8,6 +8,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import relationship
 # app/models/user_model.py
 from app.base import Base
 # keep the rest of your imports
@@ -98,3 +99,5 @@ class User(Base):
         """Updates the professional status and logs the update time."""
         self.is_professional = status
         self.professional_status_updated_at = func.now()
+
+    invitations_sent = relationship("Invitation", back_populates="inviter")
