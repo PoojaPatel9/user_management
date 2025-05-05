@@ -1,4 +1,3 @@
-# email_service.py
 from builtins import ValueError, dict, str
 from settings.config import settings
 from app.utils.smtp_connection import SMTPClient
@@ -36,10 +35,17 @@ class EmailService:
             logger.error(f"❌ Failed to send {email_type} email to {user_data['email']}: {e}")
 
     async def send_verification_email(self, user: User):
+        # Build the verification URL
         verification_url = f"{settings.server_base_url}verify-email/{user.id}/{user.verification_token}"
-        print(f"📧 Sending verification to {user.email} with URL: {verification_url}")  # Debug log
+
+        # Optionally create a QR code version (for now just use the same URL in both)
+        qr_code_url = f"{settings.server_base_url}verify-email/{user.id}/{user.verification_token}"
+
+        print(f"📧 Sending verification to {user.email} with URL: {verification_url}")
+
         await self.send_user_email({
             "name": user.first_name,
+            "email": user.email,
             "verification_url": verification_url,
-            "email": user.email
+            "qr_code_url": qr_code_url  # ✅ Add this for use in template
         }, 'email_verification')

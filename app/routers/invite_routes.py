@@ -34,7 +34,7 @@ async def accept_invite(
     import base64
 
     try:
-        nickname = base64.urlsafe_b64decode(ref.encode()).decode()
+        invitee_email = base64.urlsafe_b64decode(ref.encode()).decode()
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid reference string")
 
@@ -44,7 +44,7 @@ async def accept_invite(
         .join(User, User.id == Invitation.inviter_id)
         .where(
             and_(
-                User.nickname == nickname,
+                Invitation.invitee_email == invitee_email,
                 Invitation.status == "pending"
             )
         )

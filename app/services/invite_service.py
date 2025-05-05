@@ -32,8 +32,8 @@ async def create_invite(
     await email_service.send_user_email({
         "name": inviter.first_name,
         "email": invite_data.email,
-        "qr_code_url": qr_url,
-        "verification_url": verification_url
+        "qr_code_url": qr_url
+        #"verification_url": verification_url
     }, 'email_verification')
 
 
