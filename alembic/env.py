@@ -4,7 +4,9 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from app.models.user_model import Base  # adjust "myapp.models" to the actual location of your Base
+# alembic/env.py
+from app.base import Base
+from app.models import user_model, invitation_model  # ensure these are loaded so metadata works
 
 
 # this is the Alembic Config object, which provides
