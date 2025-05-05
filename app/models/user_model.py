@@ -100,4 +100,4 @@ class User(Base):
         self.is_professional = status
         self.professional_status_updated_at = func.now()
 
-    invitations_sent = relationship("Invitation", back_populates="inviter")
+    invitations_sent = relationship("Invitation", back_populates="inviter", cascade="all, delete-orphan")
