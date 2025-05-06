@@ -66,17 +66,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✉️ Test email logic
 def send_test_email():
     try:
         msg = MIMEText("This is a test email sent from FastAPI using Mailtrap.")
         msg["Subject"] = "Mailtrap Test Email"
         msg["From"] = SMTP_USERNAME
         msg["To"] = "test@example.com"
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10) as server:
+            server.ehlo()  # Say hello
+            try:
+                server.starttls()  # Attempt to upgrade the connection to TLS
+                server.ehlo()
+            except smtplib.SMTPException:
+                pass  # Ignore if TLS isn't supported (shouldn't happen with Mailtrap)
+
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
             server.sendmail(msg["From"], [msg["To"]], msg.as_string())
-            print("✅ Test email sent successfully.")
+
+        print("✅ Test email sent successfully.")
     except Exception as e:
         print(f"❌ Failed to send test email: {e}")
 

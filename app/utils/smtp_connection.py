@@ -22,10 +22,12 @@ class SMTPClient:
             message.attach(MIMEText(html_content, 'html'))
 
             with smtplib.SMTP(self.server, self.port) as server:
-                server.starttls()  # Use TLS
+                server.ehlo()                 # 👈 Mandatory before starttls
+                server.starttls()            # 🔐 Upgrade to TLS
+                server.ehlo()                 # 👈 Re-identify after starttls
                 server.login(self.username, self.password)
                 server.sendmail(self.username, recipient, message.as_string())
-            logging.info(f"Email sent to {recipient}")
+            logging.info(f"✅ Email sent to {recipient}")
         except Exception as e:
-            logging.error(f"Failed to send email: {str(e)}")
+            logging.error(f"❌ Failed to send email: {str(e)}")
             raise
