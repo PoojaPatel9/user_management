@@ -211,22 +211,20 @@ async def manager_user(db_session: AsyncSession):
     return user
 
 # Configure a fixture for each type of user role you want to test
-@pytest.fixture(scope="function")
-def admin_token(admin_user):
-    # Assuming admin_user has an 'id' and 'role' attribute
+@pytest.fixture
+async def admin_token(admin_user):
     token_data = {"sub": str(admin_user.id), "role": admin_user.role.name}
-    return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
+    return create_access_token(token_data)
 
-@pytest.fixture(scope="function")
-def manager_token(manager_user):
+@pytest.fixture
+async def manager_token(manager_user):
     token_data = {"sub": str(manager_user.id), "role": manager_user.role.name}
-    return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
+    return create_access_token(token_data)
 
-@pytest.fixture(scope="function")
-def user_token(user):
+@pytest.fixture
+async def user_token(user):
     token_data = {"sub": str(user.id), "role": user.role.name}
-    return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
-
+    return create_access_token(token_data)
 @pytest.fixture
 def email_service():
     if settings.send_real_mail == 'true':
