@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: 🚀 CI/CD Pipeline - User Management System
 
 on:
   push:
@@ -10,13 +10,11 @@ on:
 
 jobs:
   test:
+    name: 🧪 Run Pytest on Main
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.10.12]
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:15
         env:
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
@@ -29,15 +27,20 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    strategy:
+      matrix:
+        python-version: [3.10.12]
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache Python packages
+      - name: 📦 Cache dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -45,46 +48,49 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests with pytest
+      - name: 🧪 Run tests
         env:
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
-        run: pytest
+        run: |
+          pytest
 
-  build-and-push-docker:
+  build-and-push:
+    name: 🐳 Build and Push Docker Image
     needs: test
     runs-on: ubuntu-latest
-    environment: production  # This may be invalid depending on context
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🛠 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to DockerHub
+      - name: 🔐 Log in to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: 🐳 Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: poojapatel9/user_management:${{ github.sha }}
+          tags: poojapatel9/user_management:latest,poojapatel9/user_management:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=poojapatel9/user_management:cache
           cache-to: type=inline,mode=max
 
-      - name: Scan the Docker image
+      - name: 🔍 Scan Docker Image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'poojapatel9/user_management:${{ github.sha }}'
-          format: 'table'
-          exit-code: '1'
+          image-ref: poojapatel9/user_management:${{ github.sha }}
+          format: table
+          exit-code: 1
           ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
+          severity: CRITICAL,HIGH
