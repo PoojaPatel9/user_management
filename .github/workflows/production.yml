@@ -2,9 +2,11 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   test:
@@ -12,7 +14,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.10.12]
-
     services:
       postgres:
         image: postgres:latest
@@ -25,23 +26,24 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
       minio:
-        image: minio/minio:latest
+        image: minio/minio
         env:
           MINIO_ROOT_USER: minioadmin
           MINIO_ROOT_PASSWORD: minioadmin123
         ports:
           - 9000:9000
         options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/ready || exit 1"
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: server /data --console-address ":9001"
+        # Required default command to run MinIO server
+        entrypoint: sh -c "minio server /data --console-address ':9001'"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -58,18 +60,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Install mc CLI
-        run: |
-          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
-          chmod +x mc
-          sudo mv mc /usr/local/bin/
-
-      - name: Wait for MinIO and create bucket
-        run: |
-          sleep 10  # Wait for MinIO to fully start
-          mc alias set myminio http://localhost:9000 minioadmin minioadmin123
-          mc mb myminio/qrcodes || echo "Bucket exists"
 
       - name: Run tests with Pytest
         env:
@@ -111,11 +101,11 @@ jobs:
           cache-from: type=registry,ref=poojapatel9/user_management:cache
           cache-to: type=inline,mode=max
 
-      - name: Scan Docker image
+      - name: Scan the Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: poojapatel9/user_management:${{ github.sha }}
-          format: table
+          image-ref: 'poojapatel9/user_management:${{ github.sha }}'
+          format: 'table'
           exit-code: '0'
           ignore-unfixed: true
-          severity: CRITICAL,HIGH
+          severity: 'CRITICAL,HIGH'
