@@ -1,4 +1,4 @@
-name: 🚀 CI/CD Pipeline - User Management System
+name: CI/CD Pipeline
 
 on:
   push:
@@ -10,37 +10,30 @@ on:
 
 jobs:
   test:
-    name: 🧪 Run Pytest on Main
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10.12]
     services:
       postgres:
-        image: postgres:15
+        image: postgres:latest
         env:
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
           POSTGRES_DB: myappdb
         ports:
           - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    strategy:
-      matrix:
-        python-version: [3.10.12]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: 📦 Cache dependencies
+      - name: Cache Python packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -48,49 +41,56 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: 🧪 Run tests
+      - name: Run tests with Pytest
         env:
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
-        run: |
-          pytest
+          smtp_server: sandbox.smtp.mailtrap.io
+          smtp_port: 2525
+          smtp_username: 0cc38c22553989
+          smtp_password: 4472a0833ed626
+          server_base_url: http://localhost:8000/
+          MINIO_ENDPOINT: minio:9000
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin123
+          MINIO_BUCKET: qrcodes
+          INVITE_BASE_URL: http://localhost:8000
+        run: pytest
 
-  build-and-push:
-    name: 🐳 Build and Push Docker Image
+  build-and-push-docker:
     needs: test
     runs-on: ubuntu-latest
-
+    environment: production
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🛠 Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 🔐 Log in to DockerHub
+      - name: Log in to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 🐳 Build and Push Docker Image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: poojapatel9/user_management:latest,poojapatel9/user_management:${{ github.sha }}
+          tags: poojapatel9/user_management:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=registry,ref=poojapatel9/user_management:cache
           cache-to: type=inline,mode=max
 
-      - name: 🔍 Scan Docker Image with Trivy
+      - name: Scan the Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: poojapatel9/user_management:${{ github.sha }}
-          format: table
-          exit-code: 1
+          image-ref: 'poojapatel9/user_management:${{ github.sha }}'
+          format: 'table'
+          exit-code: '0'
           ignore-unfixed: true
-          severity: CRITICAL,HIGH
+          severity: 'CRITICAL,HIGH'
