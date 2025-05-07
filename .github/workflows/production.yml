@@ -12,7 +12,6 @@ jobs:
     strategy:
       matrix:
         python-version: [3.10.12]
-
     services:
       postgres:
         image: postgres:latest
@@ -31,8 +30,8 @@ jobs:
       minio:
         image: minio/minio
         env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ACCESS_KEY }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_SECRET_KEY }}
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin123
         ports:
           - 9000:9000
         options: >-
@@ -40,7 +39,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: server /data
 
     steps:
       - uses: actions/checkout@v4
@@ -63,8 +61,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Wait for MinIO to be ready
-        run: sleep 15
+      - name: Wait for MinIO to start
+        run: sleep 60
 
       - name: Run tests with Pytest
         env:
@@ -75,8 +73,8 @@ jobs:
           SMTP_PASSWORD: 4472a0833ed626
           SERVER_BASE_URL: http://localhost:8000/
           MINIO_ENDPOINT: localhost:9000
-          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          MINIO_ACCESS_KEY: minioadmin
+          MINIO_SECRET_KEY: minioadmin123
           MINIO_BUCKET: qrcodes
           INVITE_BASE_URL: http://localhost:8000
         run: pytest
@@ -85,7 +83,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
-
     steps:
       - uses: actions/checkout@v4
 
