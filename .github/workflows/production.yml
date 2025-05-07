@@ -30,8 +30,8 @@ jobs:
       minio:
         image: minio/minio
         env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_SECRET_KEY }}
         ports:
           - 9000:9000
         options: >-
@@ -39,6 +39,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        command: server /data
 
     steps:
       - uses: actions/checkout@v4
@@ -63,8 +64,8 @@ jobs:
 
       - name: Wait for MinIO to be ready
         run: |
-          echo "⏳ Waiting for MinIO to be live..."
-          sleep 15
+          echo "⏳ Waiting for MinIO to start..."
+          sleep 20
 
       - name: Run tests with Pytest
         env:
@@ -75,8 +76,8 @@ jobs:
           SMTP_PASSWORD: 4472a0833ed626
           SERVER_BASE_URL: http://localhost:8000/
           MINIO_ENDPOINT: localhost:9000
-          MINIO_ACCESS_KEY: minioadmin
-          MINIO_SECRET_KEY: minioadmin123
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           MINIO_BUCKET: qrcodes
           INVITE_BASE_URL: http://localhost:8000
         run: pytest
