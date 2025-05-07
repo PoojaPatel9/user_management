@@ -22,11 +22,21 @@ jobs:
           POSTGRES_DB: myappdb
         ports:
           - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin123
+        ports:
+          - 9000:9000
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "curl -f http://localhost:9000/minio/health/ready || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        command: server /data --console-address ":9001"
 
     steps:
       - uses: actions/checkout@v4
@@ -49,16 +59,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set up MinIO client
-        uses: hostwithquantum/setup-mc@main
-        with:
-          alias-name: minio
-          alias-url: http://localhost:9000
-          alias-access-key: minioadmin
-          alias-secret-key: minioadmin123
+      - name: Install mc CLI
+        run: |
+          curl -O https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          sudo mv mc /usr/local/bin/
 
-      - name: Create MinIO bucket
-        run: mc mb minio/qrcodes || echo "Bucket already exists"
+      - name: Wait for MinIO and create bucket
+        run: |
+          sleep 10  # Wait for MinIO to fully start
+          mc alias set myminio http://localhost:9000 minioadmin minioadmin123
+          mc mb myminio/qrcodes || echo "Bucket exists"
 
       - name: Run tests with Pytest
         env:
