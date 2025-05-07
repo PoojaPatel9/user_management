@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.10.12]
+
     services:
       postgres:
         image: postgres:latest
@@ -39,6 +40,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        command: server /data
 
     steps:
       - uses: actions/checkout@v4
@@ -62,9 +64,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Wait for MinIO to be ready
-        run: |
-          echo "⏳ Waiting for MinIO to be live..."
-          sleep 15
+        run: sleep 15
 
       - name: Run tests with Pytest
         env:
@@ -85,6 +85,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
+
     steps:
       - uses: actions/checkout@v4
 
