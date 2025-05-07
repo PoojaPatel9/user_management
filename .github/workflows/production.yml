@@ -2,11 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   test:
@@ -30,23 +28,10 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      minio:
-        image: minio/minio
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -64,14 +49,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Wait for MinIO to be ready and create bucket
-        run: |
-          sudo apt-get install -y curl
-          for i in {1..10}; do
-            curl -f http://localhost:9000/minio/health/live && break
-            echo "Waiting for MinIO..."; sleep 5;
-          done
-          curl -X PUT "http://localhost:9000/qrcodes" -u "minioadmin:minioadmin123"
+      - name: Set up MinIO
+        uses: valitydev/setup-minio-action@v1
+        with:
+          minio-root-user: minioadmin
+          minio-root-password: minioadmin123
+          bucket: qrcodes
 
       - name: Run tests with Pytest
         env:
@@ -92,7 +75,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
-
     steps:
       - uses: actions/checkout@v4
 
@@ -114,11 +96,11 @@ jobs:
           cache-from: type=registry,ref=poojapatel9/user_management:cache
           cache-to: type=inline,mode=max
 
-      - name: Scan the Docker image
+      - name: Scan Docker image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'poojapatel9/user_management:${{ github.sha }}'
-          format: 'table'
+          image-ref: poojapatel9/user_management:${{ github.sha }}
+          format: table
           exit-code: '0'
           ignore-unfixed: true
-          severity: 'CRITICAL,HIGH'
+          severity: CRITICAL,HIGH
