@@ -58,7 +58,7 @@ jobs:
   build-and-push-docker:
     needs: test
     runs-on: ubuntu-latest
-    environment: production
+    environment: production  # This may be invalid depending on context
     steps:
       - uses: actions/checkout@v4
 
