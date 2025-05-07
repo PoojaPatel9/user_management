@@ -13,6 +13,7 @@ from app.services.user_service import UserService
 from app.services.jwt_service import create_access_token
 from app.utils.link_generation import create_user_links, generate_pagination_links
 from app.services.email_service import EmailService
+from app.models.user_model import User
 
 router = APIRouter()
 security = HTTPBearer()
@@ -24,7 +25,7 @@ async def get_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+    current_user: User = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
     user = await UserService.get_by_id(db, user_id)
     if not user:
@@ -54,7 +55,7 @@ async def update_user(
     request: Request,
     db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+    current_user: User = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
     user_data = user_update.model_dump(exclude_unset=True)
     updated_user = await UserService.update(db, user_id, user_data)
@@ -83,7 +84,7 @@ async def delete_user(
     user_id: UUID,
     db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+    current_user: User = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
     success = await UserService.delete(db, user_id)
     if not success:
@@ -97,16 +98,16 @@ async def create_user(
     db: AsyncSession = Depends(get_db),
     email_service: EmailService = Depends(get_email_service),
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+    current_user: User = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
     existing_user = await UserService.get_by_email(db, user.email)
     if existing_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already exists")
-    
-    created_user = await UserService.create(db, user.model_dump(), email_service)
+
+    created_user = await UserService.create(db, user, email_service)
     if not created_user:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create user")
-    
+
     return UserResponse.model_construct(
         id=created_user.id,
         bio=created_user.bio,
@@ -129,7 +130,7 @@ async def list_users(
     limit: int = 10,
     db: AsyncSession = Depends(get_db),
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: dict = Depends(require_role(["ADMIN", "MANAGER"]))
+    current_user: User = Depends(require_role(["ADMIN", "MANAGER"]))
 ):
     total_users = await UserService.count(db)
     users = await UserService.list_users(db, skip, limit)
@@ -149,7 +150,7 @@ async def register(
     session: AsyncSession = Depends(get_db),
     email_service: EmailService = Depends(get_email_service)
 ):
-    user = await UserService.register_user(session, user_data.model_dump(), email_service)
+    user = await UserService.register_user(session, user_data, email_service)
     if user:
         return user
     raise HTTPException(status_code=400, detail="Email already exists")

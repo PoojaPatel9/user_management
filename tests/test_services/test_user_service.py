@@ -1,8 +1,10 @@
 from builtins import range
+from pydantic import ValidationError
 import pytest
 from sqlalchemy import select
 from app.dependencies import get_settings
 from app.models.user_model import User, UserRole
+from app.schemas.user_schemas import UserCreate
 from app.services.user_service import UserService
 from app.utils.nickname_gen import generate_nickname
 
@@ -105,13 +107,13 @@ async def test_register_user_with_valid_data(db_session, email_service):
     assert user.email == user_data["email"]
 
 # Test attempting to register a user with invalid data
-async def test_register_user_with_invalid_data(db_session, email_service):
+async def test_register_user_with_invalid_data():
     user_data = {
         "email": "registerinvalidemail",  # Invalid email
-        "password": "short",  # Invalid password
+        "password": "short"               # Invalid password
     }
-    user = await UserService.register_user(db_session, user_data, email_service)
-    assert user is None
+    with pytest.raises(ValidationError):
+        UserCreate(**user_data)
 
 # Test successful user login
 async def test_login_user_successful(db_session, verified_user):
