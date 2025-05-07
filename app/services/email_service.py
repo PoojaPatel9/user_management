@@ -17,28 +17,28 @@ class EmailService:
         )
         self.template_manager = template_manager
 
-        async def send_user_email(self, user_data: dict, email_type: str):
-            subject_map = {
-                'email_verification': "Verify Your Account",
-                'password_reset': "Password Reset Instructions",
-                'account_locked': "Account Locked Notification"
-            }
+    async def send_user_email(self, user_data: dict, email_type: str):
+        subject_map = {
+            'email_verification': "Verify Your Account",
+            'password_reset': "Password Reset Instructions",
+            'account_locked': "Account Locked Notification"
+        }
 
-            if email_type not in subject_map:
-                raise ValueError("Invalid email type")
+        if email_type not in subject_map:
+            raise ValueError("Invalid email type")
 
-            # ✅ Skip sending real emails in test mode (e.g., example.com)
-            if user_data["email"].endswith("@example.com"):
-                print(f"📧 [TEST MODE] Email to: {user_data['email']} | Type: {email_type}")
-                logger.info(f"[TEST MODE] Would send email to {user_data['email']} with subject: {subject_map[email_type]}")
-                return
+        # ✅ Skip sending real emails in test mode (e.g., example.com)
+        if user_data["email"].endswith("@example.com"):
+            print(f"📧 [TEST MODE] Email to: {user_data['email']} | Type: {email_type}")
+            logger.info(f"[TEST MODE] Would send email to {user_data['email']} with subject: {subject_map[email_type]}")
+            return
 
-            try:
-                html_content = self.template_manager.render_template(email_type, **user_data)
-                self.smtp_client.send_email(subject_map[email_type], html_content, user_data['email'])
-                logger.info(f"✅ Email sent to {user_data['email']} for {email_type}")
-            except Exception as e:
-                logger.error(f"❌ Failed to send {email_type} email to {user_data['email']}: {e}")
+        try:
+            html_content = self.template_manager.render_template(email_type, **user_data)
+            self.smtp_client.send_email(subject_map[email_type], html_content, user_data['email'])
+            logger.info(f"✅ Email sent to {user_data['email']} for {email_type}")
+        except Exception as e:
+            logger.error(f"❌ Failed to send {email_type} email to {user_data['email']}: {e}")
 
     async def send_verification_email(self, user: User):
         # Build the verification URL

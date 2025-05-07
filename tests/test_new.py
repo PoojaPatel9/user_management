@@ -2,17 +2,17 @@ import pytest
 import base64
 from httpx import AsyncClient
 from app.main import app
+from app.services.email_service import EmailService
 
 # Patch the email service at the object level (instance), not class
 @pytest.fixture(autouse=True)
-def patch_email_service(monkeypatch):
-    class MockEmailService:
-        async def send_user_email(self, payload: dict, template: str):
-            return None
+def mock_send_user_email(monkeypatch):
+    async def _mock_send_user_email(self, user_data: dict, email_type: str):
+        print(f"[MOCKED] Skipping real email to: {user_data['email']} | Type: {email_type}")
+        return
 
-    from app import dependencies
-    monkeypatch.setattr(dependencies, "get_email_service", lambda: MockEmailService())
-
+    monkeypatch.setattr(EmailService, "send_user_email", _mock_send_user_email)
+    
 @pytest.mark.asyncio
 async def test_invite_user_as_admin(async_client: AsyncClient, admin_token: str):
     response = await async_client.post(
