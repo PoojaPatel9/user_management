@@ -49,7 +49,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Start MinIO in background
+      - name: Start MinIO server
         run: |
           docker run -d \
             -p 9000:9000 \
@@ -57,7 +57,15 @@ jobs:
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin123 \
             quay.io/minio/minio server /data --console-address ":9001"
-          sleep 20  # give it time to initialize
+          sleep 15
+
+      - name: Install MinIO client (mc) and create bucket
+        run: |
+          curl -sSL https://dl.min.io/client/mc/release/linux-amd64/mc -o mc
+          chmod +x mc
+          ./mc alias set local http://localhost:9000 minioadmin minioadmin123
+          ./mc mb local/qrcodes || true
+          ./mc ls local
 
       - name: Run tests with Pytest
         env:
@@ -78,7 +86,6 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
-
     steps:
       - uses: actions/checkout@v4
 
