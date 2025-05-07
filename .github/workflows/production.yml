@@ -49,12 +49,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Set up MinIO
-        uses: valitydev/setup-minio-action@v1
+      - name: Set up MinIO client
+        uses: hostwithquantum/setup-mc@main
         with:
-          minio-root-user: minioadmin
-          minio-root-password: minioadmin123
-          bucket: qrcodes
+          alias-name: minio
+          alias-url: http://localhost:9000
+          alias-access-key: minioadmin
+          alias-secret-key: minioadmin123
+
+      - name: Create MinIO bucket
+        run: mc mb minio/qrcodes || echo "Bucket already exists"
 
       - name: Run tests with Pytest
         env:
