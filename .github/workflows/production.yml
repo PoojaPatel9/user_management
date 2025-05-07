@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.10.12]
+
     services:
       postgres:
         image: postgres:latest
@@ -23,19 +24,6 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      minio:
-        image: minio/minio
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin123
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -61,8 +49,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Wait for MinIO to start
-        run: sleep 60
+      - name: Start MinIO in background
+        run: |
+          docker run -d \
+            -p 9000:9000 \
+            --name minio \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin123 \
+            quay.io/minio/minio server /data --console-address ":9001"
+          sleep 20  # give it time to initialize
 
       - name: Run tests with Pytest
         env:
@@ -83,6 +78,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     environment: production
+
     steps:
       - uses: actions/checkout@v4
 
