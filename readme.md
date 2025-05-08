@@ -1,23 +1,22 @@
 # User Management System — Final Project @ NJIT
 
-Welcome to the **User Management System Final Project**, an epic open-source adventure crafted by Professor Keith Williams for NJIT’s software engineering students!  
-This repository represents my completed journey through implementing new features, resolving real issues, and contributing production-ready code like a professional developer.
+Welcome to the **User Management System Final Project** 
 
 ---
 
 ## Chosen Feature: QR Code Generation User Invites with MinIO
 
 ### Feature Description:
-This feature allows registered users to invite others via email using a base64-encoded QR code. The QR code encodes a unique reference string to identify the inviter, track successful invitations, and redirect the invitee upon acceptance.
+This feature allows registered users to invite others via email using a base64-encoded QR code. Each QR code encodes a unique reference string to identify the inviter, track successful invitations, and redirect the invitee upon acceptance.
 
 ### Key Capabilities:
-- Invite users via `/invite` endpoint by entering their email.
+- Invite users via the `/invite` endpoint by entering their email.
 - Generate a base64-encoded QR code for each invitation.
 - Store QR codes in **MinIO** via Docker.
-- Track invite status (`pending`, `accepted`) in a dedicated table.
-- Accept invites via `/invite/accept?ref=...`, marking them as used.
-- View personal invite stats via `/me/invites`.
-- Administer invitations via a full BREAD HATEOS-style API.
+- Track invite statuses (`pending`, `accepted`) in a dedicated database table.
+- Accept invites via `/invite/accept?ref=...`, which marks them as used.
+- View invite statistics through `/me/invites`.
+- Administer invitations via a complete BREAD HATEOS-style API.
 
 ---
 
@@ -35,51 +34,56 @@ This feature allows registered users to invite others via email using a base64-e
 
 ## Test Coverage Improvements
 
-I added **10+ tests** to ensure invite functionality works reliably:
-- Invite creation with valid email
+I added **10+ tests** to ensure the invite functionality works reliably:
+- Invite creation with a valid email
 - Self-invites are rejected (`400 Bad Request`)
 - Duplicate invites are blocked (`409 Conflict`)
-- Invalid email format returns `422 Unprocessable Entity`
-- Invite acceptance updates status
-- Invite stats return correct counts
+- Invalid email formats return `422 Unprocessable Entity`
+- Invite acceptance updates the status correctly
+- Invite statistics return accurate counts
 
-All tests use `pytest`, `httpx.AsyncClient`, and FastAPI dependency overrides.
+All tests use `pytest`, `httpx.AsyncClient`, and FastAPI dependency overrides for isolation and realism.
 
 ---
 
 ## Business Logic Validations
 
-Added validation in `invite_service.py` to ensure:
+Validation logic was added to `invite_service.py` to ensure:
 - Users **cannot invite themselves**
-- Duplicate active invites are **not allowed**
+- Duplicate pending invites are **not allowed**
 - Only pending invites can be accepted
 
-These rules prevent misuse and ensure the invite system behaves predictably and securely.
+These validations maintain system integrity, prevent misuse, and ensure a secure invite flow.
 
 ---
 
 ## CI/CD + DockerHub
 
-- GitHub Actions pipeline with PostgreSQL + MinIO containers
-- Fixed MinIO startup timing using Docker + `sleep` and `mc` CLI
-- Successfully deploys project Docker image
+- Configured GitHub Actions pipeline with PostgreSQL and MinIO service containers
+- Fixed MinIO startup timing using Docker's `sleep` and MinIO CLI (`mc`)
+- Successfully builds and pushes Docker image to DockerHub
 
-**DockerHub Repo**: [poojapatel9/user_management](https://hub.docker.com/repository/docker/poojapatel9/user_management)
+**DockerHub Repository**: [poojapatel9/user_management](https://hub.docker.com/repository/docker/poojapatel9/user_management)
+
+## DockerHub Screenshot
+
+![Screenshot of DockerHub](app/images/dockerhub_image.png)
+
 
 ---
 
 ## Reflection
 
-Working on this final project taught me how to approach problems like a real software engineer. I identified real bugs, solved integration issues in CI/CD, enforced business rules, and added meaningful test coverage. Implementing QR Code-based invites helped me understand full-stack integration between databases, file storage (MinIO), backend services, and testing—all while following modern development practices.
+Working on this final project helped me grow as a software developer. I learned how to debug real-world CI/CD pipeline issues, enforce backend business logic, and apply thorough test coverage. Implementing QR code-based invites also taught me how to integrate storage services like MinIO, and reinforced the importance of robust API design, validation, and testing practices in modern software engineering.
 
 ---
 
 ## Getting Started
 
 ```bash
-# Clone project
+# Clone the project
 git clone https://github.com/PoojaPatel9/user_management.git
 cd user_management
 
-# Start system
+# Start the system using Docker
 docker compose up --build
