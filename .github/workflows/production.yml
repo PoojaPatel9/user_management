@@ -71,7 +71,7 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://user:password@localhost:5432/myappdb
           SMTP_SERVER: sandbox.smtp.mailtrap.io
-          SMTP_PORT: 2525
+          SMTP_PORT: 2525 #port
           SMTP_USERNAME: 0cc38c22553989
           SMTP_PASSWORD: 4472a0833ed626
           SERVER_BASE_URL: http://localhost:8000/
