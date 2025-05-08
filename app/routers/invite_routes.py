@@ -23,6 +23,28 @@ async def invite_user(
     """
     Invite a user via email, generate a QR code, and store the invite.
     """
+
+    # 🔐 Validation 1: Prevent self-invite
+    if invite_data.email == current_user.email:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot invite yourself."
+        )
+
+    # 🔐 Validation 2: Prevent duplicate pending invite
+    result = await db.execute(
+        select(Invitation).where(
+            Invitation.invitee_email == invite_data.email,
+            Invitation.status == "pending"
+        )
+    )
+    existing_invite = result.scalars().first()
+    if existing_invite:
+        raise HTTPException(
+            status_code=409,
+            detail="An active invite has already been sent to this email."
+        )
+
     return await create_invite(db, invite_data, current_user, email_service, settings)
 
 

@@ -82,7 +82,8 @@ async def test_invite_duplicate_email(async_client: AsyncClient, admin_token: st
         headers={"Authorization": f"Bearer {admin_token}"},
         json={"email": email}
     )
-    assert response.status_code == 200
+    assert response.status_code == 409
+    assert response.json()["detail"] == "An active invite has already been sent to this email."
 
 @pytest.mark.asyncio
 async def test_qr_code_url_format(async_client: AsyncClient, admin_token: str):
